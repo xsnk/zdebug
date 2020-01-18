@@ -4,8 +4,10 @@
 Zdbg::Zdbg()
 {
     h_process = nullptr;
+	h_thread = nullptr;
     pid = 0;
     zdbg_active = false;
+	g_context = CONTEXT();
 }
 
 void Zdbg::load(LPCSTR path)
@@ -40,7 +42,8 @@ HANDLE Zdbg::process_open(DWORD id)
 
 HANDLE Zdbg::thread_open(DWORD id)
 {
-	HANDLE res = OpenThread(THREAD_ALL_ACCESS, false, id);
+	tid = id;
+	HANDLE res = OpenThread(THREAD_ALL_ACCESS, false, tid);
 	if (res != nullptr) {
 		return res;
 	}
@@ -74,14 +77,14 @@ std::list<DWORD> Zdbg::enumerate_threads()
 	}
 }
 
-CONTEXT Zdbg::get_thread_context(DWORD id)
+CONTEXT Zdbg::get_thread_context(DWORD id, HANDLE t_handle = nullptr)
 {
 	CONTEXT context;
 	context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
 
-	h_thread = thread_open(id);
-	if (GetThreadContext(h_thread, &context)) {
-		CloseHandle(h_thread);
+	t_handle = thread_open(id);
+	if (GetThreadContext(t_handle, &context)) {
+		CloseHandle(t_handle);
 		return context;
 	}
 	else {
@@ -107,8 +110,11 @@ void Zdbg::get_debug_event()
 {
 	DEBUG_EVENT debug_event;
 	if (WaitForDebugEvent(&debug_event, INFINITE)) {
-//		system("pause");
-//		zdbg_active = false;
+		h_thread = thread_open(debug_event.dwThreadId);
+		g_context = get_thread_context(tid, h_thread);
+		std::cout << " Event Code " << debug_event.dwDebugEventCode
+			<< " Thread ID " << debug_event.dwThreadId << std::endl;
+
 		ContinueDebugEvent(debug_event.dwProcessId, debug_event.dwThreadId, DBG_CONTINUE);
 	}
 }

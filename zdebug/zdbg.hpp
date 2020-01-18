@@ -13,7 +13,7 @@ public:
 	HANDLE thread_open(DWORD tid);
 
 	std::list<DWORD> enumerate_threads();
-	CONTEXT get_thread_context(DWORD id);
+	CONTEXT get_thread_context(DWORD id, HANDLE t_handle);
 
 	void attach(DWORD pid);
 	void get_debug_event();
@@ -27,5 +27,7 @@ private:
     HANDLE h_process;
 	HANDLE h_thread;
     DWORD pid;
-    bool zdbg_active = false;
+	DWORD tid;
+    BOOL zdbg_active;
+	CONTEXT g_context;
 };

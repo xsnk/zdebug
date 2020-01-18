@@ -8,6 +8,9 @@ int main()
 	std::cout << "Enter the pid to attach to" << std::endl;
 	std::cin >> pid;
 	dbg.attach(pid);
+	dbg.run();
+	dbg.detach();
+	/*
 	std::list<DWORD> lst = dbg.enumerate_threads();
 
 	for (auto t : lst) {
@@ -33,5 +36,6 @@ int main()
 		std::cout << "[*] END DUMP---------------------" << std::endl;
 	}
 	dbg.detach();
+	*/
 	return 0;
 }
