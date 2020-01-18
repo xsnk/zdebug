@@ -106,16 +106,42 @@ void Zdbg::attach(DWORD id)
 	}
 }
 
+auto Zdbg::breakpoint_exception_handler() 
+{
+	std::cout << "Inside breakpoint handler" << std::endl;
+	std::cout << "Exception address " << std::hex << exception_address << std::endl;
+	return DBG_CONTINUE;
+}
+
 void Zdbg::get_debug_event()
 {
 	DEBUG_EVENT debug_event;
+	auto continue_status = DBG_CONTINUE;
 	if (WaitForDebugEvent(&debug_event, INFINITE)) {
 		h_thread = thread_open(debug_event.dwThreadId);
 		g_context = get_thread_context(tid, h_thread);
 		std::cout << " Event Code " << debug_event.dwDebugEventCode
 			<< " Thread ID " << debug_event.dwThreadId << std::endl;
 
-		ContinueDebugEvent(debug_event.dwProcessId, debug_event.dwThreadId, DBG_CONTINUE);
+		if (debug_event.dwDebugEventCode == EXCEPTION_DEBUG_EVENT) {
+			exception = debug_event.u.Exception.ExceptionRecord.ExceptionCode;
+			exception_address = debug_event.u.Exception.ExceptionRecord.ExceptionAddress;
+
+			if (exception == EXCEPTION_ACCESS_VIOLATION) {
+				std::cout << "--:: EXCEPTION VIOLATION DETECTED" << std::endl;
+			}
+			else if (exception == EXCEPTION_BREAKPOINT) {
+				continue_status = breakpoint_exception_handler();
+			}
+			else if (exception == EXCEPTION_GUARD_PAGE) {
+				std::cout << "--:: GAURD PAGE EXCEPTION DETECTED" << std::endl;
+			}
+			else if (exception == EXCEPTION_SINGLE_STEP) {
+				std::cout << "Single stepping!" << std::endl;
+			}
+		}
+
+		ContinueDebugEvent(debug_event.dwProcessId, debug_event.dwThreadId, continue_status);
 	}
 }
 

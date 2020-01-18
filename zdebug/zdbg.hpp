@@ -21,6 +21,9 @@ public:
 	bool detach();
 
 private:
+
+	auto breakpoint_exception_handler();
+
 	STARTUPINFO startupinfo;
 	PROCESS_INFORMATION processinfo;
 
@@ -30,4 +33,6 @@ private:
 	DWORD tid;
     BOOL zdbg_active;
 	CONTEXT g_context;
+	DWORD exception;
+	void* exception_address;
 };
